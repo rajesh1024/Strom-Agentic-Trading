@@ -513,4 +513,35 @@ class DataVendorAdapter(ABC):
     @abstractmethod
     async def health_check(self) -> bool:
         """Return True if vendor API is reachable."""
+
+---
+
+## Frontend Core Store Specifications
+
+### 1. Portfolio Store (`portfolio-store.ts`)
+Manages the user's open positions, total balances, and order execution history.
+- **Support:** Differentiates between `equity` and `crypto` assets.
+- **Selectors:** Provides filtering for equity vs crypto position sets.
+- **Persistence:** LocalStorage integration to survive page reloads when fetching from WS is not instantaneous.
+
+### 2. Config Store (`config-store.ts`)
+Stores global system configuration and operational modes.
+- **Variables:** `TradingMode` (advisory vs semi-auto), kill switch status, risk tolerance.
+- **Actions:** Safe toggle capabilities (e.g. `engageKillSwitch()` forces 'advisory' mode and disables auto confirmation).
+
+### 3. Agent Store (`agent-store.ts`)
+Tracks instances of autonomous trading agents.
+- **State:** Dictionay of `TradingAgent`s by `id`, marking `lastHeartbeat` and `status` (`running`, `stopped`).
+- **Dynamic Check:** `getStaleAgents()` provides a method to find crashed or lost agents based on a threshold ms since last heartbeat.
+
+### 4. Signal Store (`signal-store.ts`)
+Tracks incoming trade suggestions, system alerts, and notification payloads from backend workers.
+- **Feature:** Tracks read/unread status for notifications and caps at 100 recent signals.
+
+## Frontend Query Cache & Data Mutating
+- **WebSocket Listener:** `useWebSocket` hook listens to stream from backend and invalidates specific Query keys (e.g., `["portfolio"]`, `["market-data"]`) upon matched event `type`.
+- **Optimism:** Using `useSubmitOrder` hook configured with arbitrary tanstack mutations. Invoking an order will:
+  - Add pending order to `portfolioStore`'s history immediately.
+  - Cancel any outbound overlapping queries.
+  - Revert the query cache if the backend API returns error status.
 ```

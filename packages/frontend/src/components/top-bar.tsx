@@ -12,9 +12,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { useConfigStore } from "@/store/config-store"
+import { useWebSocket } from "@/hooks/use-websocket"
+
 export function TopBar() {
-    const [mode, setMode] = React.useState<"advisory" | "semi-auto">("advisory")
-    const [isConnected] = React.useState(true)
+    const { config, toggleMode, engageKillSwitch } = useConfigStore()
+    const { isConnected, isStale } = useWebSocket()
 
     return (
         <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -25,12 +28,14 @@ export function TopBar() {
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <div className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-accent/50 transition-colors cursor-help">
-                                <div className={`size-2.5 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-red-500"}`} />
-                                <span className="text-sm font-medium hidden sm:inline-block">Connected</span>
+                                <div className={`size-2.5 rounded-full ${isConnected && !isStale ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : isStale ? "bg-amber-500" : "bg-red-500"}`} />
+                                <span className="text-sm font-medium hidden sm:inline-block">
+                                    {isConnected ? (isStale ? "Stale Data" : "Connected") : "Disconnected"}
+                                </span>
                             </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Trading Engine: WebSocket Active</p>
+                            <p>Trading Engine: {isConnected ? (isStale ? "Active, but data is stale (>30s)" : "WebSocket Active") : "Disconnected"}</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -44,17 +49,17 @@ export function TopBar() {
 
                 <div className="flex items-center gap-2">
                     <Badge
-                        variant={mode === "semi-auto" ? "destructive" : "secondary"}
+                        variant={config.mode === "semi-auto" ? "destructive" : "secondary"}
                         className="h-8 px-3 cursor-pointer hover:opacity-80 transition-all gap-1.5 flex items-center"
-                        onClick={() => setMode(mode === "advisory" ? "semi-auto" : "advisory")}
+                        onClick={toggleMode}
                     >
-                        {mode === "semi-auto" ? (
+                        {config.mode === "semi-auto" ? (
                             <ShieldCheck className="size-3.5" />
                         ) : (
                             <Activity className="size-3.5" />
                         )}
                         <span className="uppercase tracking-wider text-[10px] font-bold">
-                            {mode === "advisory" ? "Advisory" : "Semi-Auto"}
+                            {config.mode === "advisory" ? "Advisory" : "Semi-Auto"}
                         </span>
                     </Badge>
                 </div>
@@ -62,12 +67,14 @@ export function TopBar() {
                 <div className="h-4 w-px bg-border mx-1" />
 
                 <Button
-                    variant="destructive"
+                    variant={config.isKillSwitchEngaged ? "outline" : "destructive"}
                     size="sm"
+                    onClick={engageKillSwitch}
+                    disabled={config.isKillSwitchEngaged}
                     className="h-9 px-4 font-bold tracking-tight uppercase shadow-lg shadow-destructive/20 hover:shadow-destructive/40 transition-all gap-2"
                 >
                     <Power className="size-4" />
-                    <span className="hidden sm:inline">Kill Switch</span>
+                    <span className="hidden sm:inline">{config.isKillSwitchEngaged ? "Engaged" : "Kill Switch"}</span>
                 </Button>
 
                 <ModeToggle />
