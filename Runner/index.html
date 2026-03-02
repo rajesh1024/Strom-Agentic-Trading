@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STROM Wave Runner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#09090b;--bg2:#111114;--bg3:#19191f;--bg4:#252530;--bg5:#30303e;
+--fg:#ececf1;--fg2:#a1a1aa;--fg3:#63637a;
+--acc:#f97316;--acc2:#fb923c;--acc3:#fdba74;
+--grn:#22c55e;--grn2:#16a34a;--grnBg:rgba(22,163,74,.1);
+--red:#ef4444;--red2:#dc2626;--redBg:rgba(220,38,38,.08);
+--blu:#3b82f6;--blu2:#2563eb;--bluBg:rgba(59,130,246,.08);
+--pur:#a855f7;--purBg:rgba(168,85,247,.08);
+--yel:#eab308;--yelBg:rgba(234,179,8,.08);
+--cyn:#06b6d4;--cynBg:rgba(6,182,212,.08);
+--r:10px;--rs:6px;
+}
+html{font-size:15px}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh}
+code,.mono{font-family:'JetBrains Mono',monospace}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--fg3);border-radius:3px}
+
+.container{max-width:960px;margin:0 auto;padding:16px}
+
+/* ── Upload ── */
+.upload-wrap{max-width:560px;margin:60px auto 0}
+.upload-zone{
+  border:2px dashed var(--bg5);border-radius:var(--r);padding:64px 32px;text-align:center;
+  cursor:pointer;transition:all .25s;background:var(--bg2);position:relative;
+}
+.upload-zone:hover,.upload-zone.over{border-color:var(--acc);background:var(--bg3)}
+.upload-zone h2{font-size:1.15rem;font-weight:700;margin:12px 0 6px}
+.upload-zone p{color:var(--fg3);font-size:.82rem}
+.how-box{margin-top:24px;padding:18px;background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--r)}
+.how-box h3{font-size:.82rem;color:var(--acc);margin-bottom:8px;font-weight:700}
+.how-box p{color:var(--fg2);font-size:.8rem;line-height:1.75}
+
+/* ── Top bar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;flex-wrap:wrap;gap:8px}
+.topbar h1{font-size:1.15rem;font-weight:900;color:var(--acc)}
+.topbar-links{display:flex;gap:16px;font-size:.75rem}
+.topbar-links span{cursor:pointer;color:var(--fg3);transition:color .2s}
+.topbar-links span:hover{color:var(--fg)}
+
+/* ── Progress ── */
+.gprog{margin-bottom:16px}
+.gprog-row{display:flex;justify-content:space-between;font-size:.72rem;color:var(--fg3);margin-bottom:4px}
+.bar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.stat{padding:12px;background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--rs)}
+.stat-l{font-size:.62rem;color:var(--fg3);text-transform:uppercase;letter-spacing:1.2px;font-weight:700}
+.stat-v{font-size:1.2rem;font-weight:800;margin-top:2px}
+
+/* ── Wave tabs ── */
+.wtabs{display:flex;gap:3px;padding:3px;background:var(--bg2);border-radius:var(--r);margin-bottom:16px;overflow-x:auto}
+.wtab{
+  padding:8px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;font-weight:600;
+  font-size:.78rem;transition:all .2s;display:flex;align-items:center;gap:6px;flex-shrink:0;
+  border:1px solid transparent;color:var(--fg2);
+}
+.wtab:hover:not(.locked){background:var(--bg3)}
+.wtab.on{background:var(--acc);color:#000;border-color:var(--acc)}
+.wtab.done{background:var(--grnBg);color:var(--grn);border-color:rgba(22,163,74,.3)}
+.wtab.locked{opacity:.35;cursor:not-allowed}
+.wtab .ct{font-size:.65rem;padding:1px 6px;border-radius:8px;font-weight:700;background:rgba(0,0,0,.15)}
+.wtab.on .ct{background:rgba(0,0,0,.25);color:#fff}
+.wtab.done .ct{background:var(--grn2);color:#fff}
+
+/* ── Wave header ── */
+.whdr{padding:14px 18px;background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--r);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.whdr h2{font-size:1rem;font-weight:800}
+.whdr-sub{color:var(--fg3);font-size:.8rem;margin-top:1px}
+.whdr-right{text-align:right}
+.whdr-right .lbl{font-size:.7rem;color:var(--fg3);margin-bottom:3px}
+
+/* ── Task card ── */
+.tcard{background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--r);overflow:hidden;transition:border-color .2s;margin-bottom:6px}
+.tcard:hover{border-color:var(--bg5)}
+.tcard.exp{border-color:var(--acc)}
+.tcard.tcdone{opacity:.55}
+.thdr{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s}
+.thdr:hover{background:var(--bg3)}
+.tchk{
+  width:24px;height:24px;border-radius:50%;border:2px solid var(--bg5);display:flex;
+  align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;
+  font-size:.7rem;font-weight:700;
+}
+.tchk:hover{border-color:var(--grn)}
+.tchk.chkd{background:var(--grn);border-color:var(--grn);color:#000}
+.tid{
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.75rem;
+  padding:3px 8px;border-radius:5px;min-width:38px;text-align:center;
+}
+.tid.be{background:var(--bluBg);color:var(--blu)}
+.tid.fe{background:var(--grnBg);color:var(--grn)}
+.tid.qa{background:var(--yelBg);color:var(--yel)}
+.tid.dv{background:var(--purBg);color:var(--pur)}
+.tid.dc{background:var(--cynBg);color:var(--cyn)}
+.tid.ag{background:var(--cynBg);color:var(--cyn)}
+.ttl{flex:1;font-weight:600;font-size:.88rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ttl.struck{text-decoration:line-through;color:var(--fg3)}
+.tagt{font-size:.68rem;padding:2px 8px;border-radius:12px;background:var(--bg4);color:var(--fg2);font-weight:500;white-space:nowrap}
+.tpri{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
+.tpri.crit{background:var(--redBg);color:var(--red)}
+.tpri.high{background:var(--yelBg);color:var(--yel)}
+.tpri.med{background:var(--bg4);color:var(--fg3)}
+.tcpx{font-size:.7rem;font-weight:700;color:var(--fg3);width:20px;text-align:center}
+.chev{transition:transform .25s;color:var(--fg3);font-size:.65rem;flex-shrink:0}
+.chev.open{transform:rotate(180deg)}
+
+/* ── Task body ── */
+.tbody{padding:0 16px 16px;border-top:1px solid var(--bg4)}
+.slbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--acc);margin:14px 0 6px;display:flex;align-items:center;gap:8px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bg4)}
+.dtxt{color:var(--fg2);font-size:.84rem;line-height:1.7}
+.ftags{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0}
+.ftag{font-family:'JetBrains Mono',monospace;font-size:.7rem;padding:3px 8px;border-radius:5px;background:var(--bg4);color:var(--fg2)}
+.aitem{padding:7px 10px;border-left:3px solid var(--grn2);margin:4px 0;background:var(--grnBg);border-radius:0 var(--rs) var(--rs) 0;font-size:.8rem;color:var(--grn);line-height:1.5}
+.vitem{padding:7px 10px;border-left:3px solid var(--blu2);margin:4px 0;background:var(--bluBg);border-radius:0 var(--rs) var(--rs) 0;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--blu);line-height:1.5}
+.dtag{display:inline-block;font-size:.7rem;padding:2px 7px;border-radius:5px;background:var(--redBg);color:var(--red);margin:2px;font-weight:600}
+.ptag{display:inline-block;font-size:.7rem;padding:2px 7px;border-radius:5px;background:var(--grnBg);color:var(--grn);margin:2px;font-weight:600}
+.ctag{display:inline-block;font-size:.7rem;padding:3px 8px;border-radius:5px;background:rgba(249,115,22,.08);color:var(--acc2);margin:2px;font-weight:600;border:1px solid rgba(249,115,22,.15)}
+
+/* ── Prompt box ── */
+.pbox{margin-top:14px;border:1px solid var(--acc);border-radius:var(--rs);overflow:hidden}
+.pbox-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(249,115,22,.06);border-bottom:1px solid rgba(249,115,22,.2)}
+.pbox-hdr span{font-weight:700;font-size:.72rem;color:var(--acc);text-transform:uppercase;letter-spacing:.8px}
+.cbtn{
+  padding:5px 14px;border-radius:5px;background:var(--acc);color:#000;border:none;
+  font-weight:700;font-size:.75rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;
+}
+.cbtn:hover{background:var(--acc2)}
+.cbtn.ok{background:var(--grn);color:#fff}
+.pbox-body{padding:14px;background:var(--bg);max-height:360px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.8;color:var(--fg2);white-space:pre-wrap;word-break:break-word;user-select:all}
+
+/* ── Wave complete ── */
+.wcomp{padding:20px;background:var(--grnBg);border:1px solid rgba(22,163,74,.25);border-radius:var(--r);text-align:center;margin-top:12px}
+.wcomp h3{color:var(--grn);font-size:1.1rem}
+.wcomp p{color:var(--fg2);font-size:.85rem;margin-top:4px}
+.nbtn{
+  margin-top:12px;padding:10px 28px;border-radius:var(--rs);background:var(--acc);
+  color:#000;border:none;font-weight:700;font-size:.92rem;cursor:pointer;
+  font-family:'Outfit',sans-serif;transition:all .15s;
+}
+.nbtn:hover{background:var(--acc2);transform:translateY(-1px)}
+
+.allcomp{padding:24px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:var(--r);text-align:center;margin-top:12px}
+.allcomp h3{color:var(--acc);font-size:1.3rem;font-weight:900}
+
+.ftr{text-align:center;padding:32px 0 16px;color:var(--fg3);font-size:.7rem}
+
+@media(max-width:700px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .thdr{flex-wrap:wrap;gap:6px}
+  .tagt,.tpri{font-size:.6rem}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback} = React;
+
+const WAVES = [
+  {id:1,name:'Wave 1 — Kickoff',desc:'5 agents parallel, zero deps — start all immediately',ids:['B1','F1','D1','Q1','P5']},
+  {id:2,name:'Wave 2 — Foundation',desc:'DB, Events, CI, API client, components, agent base',ids:['B2','B3','B13','A1','F2','F8','F9','D2']},
+  {id:3,name:'Wave 3 — Services',desc:'Market data, Dhan, Crypto, features, WS, LLM router, memory',ids:['B4','B4a','B4b','B5','B8','B11','A6','A7','D4','D5','P1','P2']},
+  {id:4,name:'Wave 4 — Core Logic',desc:'Signal → Risk engines (critical path), tools, onboarding, admin UI',ids:['B6','B7','A2','F2a','F6','F7','D6','P3']},
+  {id:5,name:'Wave 5 — Integration',desc:'Execution gateway, portfolio, kill switch, skills, supervisor',ids:['B9','B10','B12','A3','A4','F10','F11','D7','D8','P4','Q2']},
+  {id:6,name:'Wave 6 — Advanced',desc:'Backtest runner, onboarding API, sub-agents, FE tests',ids:['B14','B15','A5','F12','Q3','Q4']},
+  {id:7,name:'Wave 7 — Validation',desc:'Integration tests + E2E cycles — quality gate',ids:['B16','Q5','Q6']},
+  {id:8,name:'Wave 8 — Hardening',desc:'Load testing + security audit — final gate before deploy',ids:['Q7','Q8']},
+];
+
+function ws(id){if(!id)return'be';const c=id.charAt(0);return c==='F'?'fe':c==='Q'?'qa':c==='D'?'dv':c==='P'?'dc':c==='A'?'ag':'be'}
+function pricls(p){if(!p)return'med';const l=p.toLowerCase();return l.includes('critical')?'crit':l.includes('high')?'high':'med'}
+
+function mkPrompt(t){
+  let s=`TITLE: [${t.id}] ${t.title}\n\nAGENT: ${t.agent}\nWORKSTREAM: ${t.workstream}\nCOMPLEXITY: ${t.complexity}\nPRIORITY: ${t.priority}\n\n`;
+  s+=`DEPENDS ON: ${t.dependsOn}\nCAN RUN PARALLEL WITH: ${t.parallelWith}\n\n`;
+  s+=`═══════════════════════════════\nGOAL\n═══════════════════════════════\n${t.description}\n\n`;
+  s+=`═══════════════════════════════\nFILES TO CREATE / EDIT\n═══════════════════════════════\n${t.files}\n\n`;
+  s+=`═══════════════════════════════\nACCEPTANCE CRITERIA\n═══════════════════════════════\n${t.acceptance}\n\n`;
+  s+=`═══════════════════════════════\nDONE WHEN (verification commands)\n═══════════════════════════════\n${t.doneWhen}\n\n`;
+  if(t.contextFiles?.length){s+=`═══════════════════════════════\nCONTEXT FILES — Paste into Antigravity\n═══════════════════════════════\n`;t.contextFiles.forEach(c=>{s+=`  → ${c}\n`})}
+  return s;
+}
+
+function App(){
+  const [tasks,setTasks]=useState([]);
+  const [wave,setWave]=useState(1);
+  const [done,setDone]=useState(()=>{try{return JSON.parse(localStorage.getItem('strom_done')||'{}')}catch{return{}}});
+  const [exp,setExp]=useState(null);
+  const [copied,setCopied]=useState(null);
+  const [drag,setDrag]=useState(false);
+  const fref=useRef(null);
+
+  useEffect(()=>{try{localStorage.setItem('strom_done',JSON.stringify(done))}catch{}},[done]);
+
+  const parse=useCallback((file)=>{
+    const r=new FileReader();
+    r.onload=(e)=>{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+      let hi=-1;
+      for(let i=0;i<Math.min(rows.length,10);i++){if(rows[i]&&rows[i].some(c=>String(c).includes('Task ID'))){hi=i;break}}
+      if(hi===-1){alert('Header row with "Task ID" not found');return}
+      const hds=rows[hi].map(h=>String(h).trim().toLowerCase());
+      const cm={};
+      hds.forEach((h,i)=>{
+        if(h.includes('task id'))cm.id=i;
+        else if(h.includes('title')&&!h.includes('sub'))cm.title=i;
+        else if(h.includes('workstream'))cm.workstream=i;
+        else if(h.includes('antigravity')&&h.includes('agent'))cm.agent=i;
+        else if(h.includes('depends'))cm.dependsOn=i;
+        else if(h.includes('parallel group'))cm.pg=i;
+        else if(h.includes('can run')||h.includes('parallel with'))cm.pw=i;
+        else if(h.includes('description'))cm.desc=i;
+        else if(h.includes('files')||h.includes('modules'))cm.files=i;
+        else if(h.includes('acceptance'))cm.acc=i;
+        else if(h.includes('completion')||h.includes('verification'))cm.ver=i;
+        else if(h.includes('complexity'))cm.cpx=i;
+        else if(h.includes('status'))cm.st=i;
+        else if(h.includes('context'))cm.ctx=i;
+        else if(h.includes('priority'))cm.pri=i;
+      });
+      const out=[];
+      for(let i=hi+1;i<rows.length;i++){
+        const row=rows[i];if(!row||!row[cm.id])continue;
+        const id=String(row[cm.id]).trim();
+        if(!id||id.startsWith('═')||id.length>6)continue;
+        const ctxRaw=String(row[cm.ctx]||'');
+        out.push({id,title:String(row[cm.title]||''),workstream:String(row[cm.workstream]||''),agent:String(row[cm.agent]||''),dependsOn:String(row[cm.dependsOn]||''),parallelGroup:String(row[cm.pg]||''),parallelWith:String(row[cm.pw]||''),description:String(row[cm.desc]||''),files:String(row[cm.files]||''),acceptance:String(row[cm.acc]||''),doneWhen:String(row[cm.ver]||''),complexity:String(row[cm.cpx]||''),priority:String(row[cm.pri]||''),contextFiles:ctxRaw.split(/[,\n]/).map(s=>s.trim()).filter(s=>s.endsWith('.md'))});
+      }
+      setTasks(out);setWave(1);setExp(null);
+    };
+    r.readAsArrayBuffer(file);
+  },[]);
+
+  const toggle=(id)=>setDone(p=>{const n={...p};n[id]?delete n[id]:n[id]=Date.now();return n});
+  const copy=async(t)=>{try{await navigator.clipboard.writeText(mkPrompt(t));setCopied(t.id);setTimeout(()=>setCopied(null),2000)}catch{/* fallback: user selects */}};
+
+  const wTasks=(wid)=>{const w=WAVES.find(w=>w.id===wid);return w?w.ids.map(tid=>tasks.find(t=>t.id===tid)).filter(Boolean):[]};
+  const wDone=(wid)=>wTasks(wid).filter(t=>done[t.id]).length;
+  const wComp=(wid)=>{const wt=wTasks(wid);return wt.length>0&&wt.every(t=>done[t.id])};
+  const wOpen=(wid)=>wid===1||wComp(wid-1);
+
+  const total=tasks.length;const totalDone=Object.keys(done).filter(k=>tasks.some(t=>t.id===k)).length;
+  const cur=wTasks(wave);const curDone=cur.filter(t=>done[t.id]).length;
+
+  // ── Upload screen ──
+  if(!tasks.length)return(
+    <div className="container">
+      <div style={{textAlign:'center',padding:'48px 0 24px'}}>
+        <h1 style={{fontSize:'1.8rem',fontWeight:900,color:'var(--acc)'}}>STROM Wave Runner</h1>
+        <p style={{color:'var(--fg3)',fontSize:'.85rem',marginTop:4}}>Antigravity Task Dispatcher</p>
+      </div>
+      <div className="upload-wrap">
+        <div className={`upload-zone ${drag?'over':''}`} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);e.dataTransfer.files[0]&&parse(e.dataTransfer.files[0])}} onClick={()=>fref.current?.click()}>
+          <div style={{fontSize:'48px',opacity:.5}}>📊</div>
+          <h2>Drop your Excel here</h2>
+          <p>or click to browse — <code>.xlsx</code> task board</p>
+          <input ref={fref} type="file" accept=".xlsx,.xls" onChange={e=>e.target.files[0]&&parse(e.target.files[0])} style={{display:'none'}}/>
+        </div>
+        <div className="how-box">
+          <h3>How this works</h3>
+          <p>
+            1. Upload <code>strom_antigravity_tasks.xlsx</code><br/>
+            2. Tasks appear organized in 8 dependency-ordered waves<br/>
+            3. Expand a task → see goal, files, criteria, verification<br/>
+            4. Click <strong>Copy Prompt</strong> → paste into Antigravity agent<br/>
+            5. Mark tasks ✓ as complete → next wave unlocks<br/>
+            6. Progress saves in your browser automatically
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Main view ──
+  return(
+    <div className="container">
+      <div className="topbar">
+        <h1>⚡ STROM Wave Runner</h1>
+        <div className="topbar-links">
+          <span onClick={()=>setTasks([])}>↻ Upload new file</span>
+          <span onClick={()=>{if(confirm('Reset all task progress?'))setDone({})}} style={{color:'var(--red)'}}>Reset progress</span>
+        </div>
+      </div>
+
+      {/* Global progress */}
+      <div className="gprog">
+        <div className="gprog-row"><span>Overall: {totalDone} / {total} tasks</span><span>{total?Math.round(totalDone/total*100):0}%</span></div>
+        <div className="bar"><div className="bar-fill" style={{width:`${total?totalDone/total*100:0}%`,background:'linear-gradient(90deg,var(--acc),var(--acc2))'}}/></div>
+      </div>
+
+      {/* Stats */}
+      <div className="stats">
+        {[['Backend','Backend'],['Frontend','Frontend'],['Agents','Agents'],['QA','QA'],['DevOps+Docs',null]].map(([lbl,key])=>{
+          const wt=tasks.filter(t=>key?t.workstream===key:(t.workstream==='DevOps'||t.workstream==='Docs'));
+          const wd=wt.filter(t=>done[t.id]).length;
+          return <div className="stat" key={lbl}><div className="stat-l">{lbl}</div><div className="stat-v" style={{color:wd===wt.length&&wt.length?'var(--grn)':'var(--fg)'}}>{wd}/{wt.length}</div></div>
+        })}
+      </div>
+
+      {/* Wave tabs */}
+      <div className="wtabs">
+        {WAVES.map(w=>{
+          const c=wComp(w.id),u=wOpen(w.id),d=wDone(w.id),n=wTasks(w.id).length;
+          return <div key={w.id} className={`wtab ${wave===w.id?'on':''} ${c?'done':''} ${!u?'locked':''}`} onClick={()=>u&&setWave(w.id)} title={!u?`Complete Wave ${w.id-1} first`:w.desc}>
+            {c?'✓':!u?'🔒':''} W{w.id} <span className="ct">{d}/{n}</span>
+          </div>
+        })}
+      </div>
+
+      {/* Wave header */}
+      <div className="whdr">
+        <div>
+          <h2>{WAVES[wave-1]?.name}</h2>
+          <div className="whdr-sub">{WAVES[wave-1]?.desc}</div>
+        </div>
+        <div className="whdr-right">
+          <div className="lbl">{curDone}/{cur.length} done</div>
+          <div className="bar" style={{width:140}}><div className="bar-fill" style={{width:`${cur.length?curDone/cur.length*100:0}%`,background:'linear-gradient(90deg,var(--grn2),var(--grn))'}}/></div>
+        </div>
+      </div>
+
+      {/* Tasks */}
+      {cur.map(t=>{
+        const isExp=exp===t.id,isDone=!!done[t.id],w=ws(t.id);
+        return <div key={t.id} className={`tcard ${isExp?'exp':''} ${isDone?'tcdone':''}`}>
+          <div className="thdr" onClick={()=>setExp(isExp?null:t.id)}>
+            <div className={`tchk ${isDone?'chkd':''}`} onClick={e=>{e.stopPropagation();toggle(t.id)}}>{isDone?'✓':''}</div>
+            <span className={`tid ${w}`}>{t.id}</span>
+            <span className={`ttl ${isDone?'struck':''}`}>{t.title}</span>
+            <span className="tagt">{t.agent}</span>
+            <span className={`tpri ${pricls(t.priority)}`}>{t.priority}</span>
+            <span className="tcpx">{t.complexity}</span>
+            <span className={`chev ${isExp?'open':''}`}>▼</span>
+          </div>
+          {isExp&&<div className="tbody">
+            <div className="slbl">Depends On (complete first)</div>
+            <div>{t.dependsOn.split(/[,\n]/).map((d,i)=><span key={i} className="dtag">{d.trim()}</span>)}</div>
+
+            <div className="slbl">Can Run Parallel With</div>
+            <div>{t.parallelWith.split(/[,\n]/).filter(s=>s.trim()).map((d,i)=><span key={i} className="ptag">{d.trim()}</span>)}</div>
+
+            <div className="slbl">Goal</div>
+            <div className="dtxt">{t.description}</div>
+
+            <div className="slbl">Files to Create / Edit</div>
+            <div className="ftags">{t.files.split(/\n/).filter(f=>f.trim()).map((f,i)=><span key={i} className="ftag">{f.trim()}</span>)}</div>
+
+            <div className="slbl">Acceptance Criteria</div>
+            {t.acceptance.split(/\n/).filter(a=>a.trim()).map((a,i)=><div key={i} className="aitem">{a.trim()}</div>)}
+
+            <div className="slbl">Verification (run these)</div>
+            {t.doneWhen.split(/\n/).filter(v=>v.trim()).map((v,i)=><div key={i} className="vitem">{v.trim()}</div>)}
+
+            {t.contextFiles?.length>0&&<><div className="slbl">Context Files for Antigravity</div><div>{t.contextFiles.map((c,i)=><span key={i} className="ctag">📎 {c}</span>)}</div></>}
+
+            <div className="pbox">
+              <div className="pbox-hdr">
+                <span>📋 Full Prompt → {t.agent}</span>
+                <button className={`cbtn ${copied===t.id?'ok':''}`} onClick={()=>copy(t)}>{copied===t.id?'✓ Copied!':'Copy Prompt'}</button>
+              </div>
+              <div className="pbox-body">{mkPrompt(t)}</div>
+            </div>
+          </div>}
+        </div>
+      })}
+
+      {/* Wave complete */}
+      {wComp(wave)&&wave<8&&<div className="wcomp">
+        <h3>✅ Wave {wave} Complete!</h3>
+        <p>All {cur.length} tasks done. Wave {wave+1} is unlocked.</p>
+        <button className="nbtn" onClick={()=>setWave(wave+1)}>Proceed to Wave {wave+1} →</button>
+      </div>}
+      {wComp(wave)&&wave===8&&<div className="allcomp">
+        <h3>🚀 ALL WAVES COMPLETE!</h3>
+        <p style={{color:'var(--fg2)',marginTop:4}}>STROM is fully built. Deploy time.</p>
+      </div>}
+
+      <div className="ftr">STROM Wave Runner v1.0 — progress auto-saved locally</div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>

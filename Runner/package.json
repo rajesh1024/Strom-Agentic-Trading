@@ -1,0 +1,11 @@
+{
+  "name": "strom-wave-runner",
+  "version": "1.0.0",
+  "description": "STROM Antigravity Task Dispatcher — Wave-based prompt runner",
+  "scripts": {
+    "start": "npx serve . -l 3333 -s",
+    "open": "npx open-cli http://localhost:3333"
+  },
+  "keywords": [],
+  "license": "MIT"
+}
