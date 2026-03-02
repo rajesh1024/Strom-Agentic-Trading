@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from src.config import settings
 from src.utils.audit_middleware import AuditMiddleware
-from src.routers import admin
+from src.routers import admin, market_data
 
 # Configure structured logging
 structlog.configure(
@@ -47,20 +47,21 @@ app.add_middleware(
 # Audit Middleware (execute after CORSMiddleware)
 app.add_middleware(AuditMiddleware)
 
+
 # Middleware for correlation ID and request logging
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
     structlog.contextvars.clear_contextvars()
     structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
-    
+
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
-    
+
     response.headers["X-Correlation-ID"] = correlation_id
     response.headers["X-Process-Time"] = str(process_time)
-    
+
     logger.info(
         "request_processed",
         path=request.url.path,
@@ -70,29 +71,33 @@ async def add_process_time_header(request: Request, call_next):
     )
     return response
 
+
 # Global error handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     correlation_id = structlog.contextvars.get_contextvars().get("correlation_id", "unknown")
-    
+
     error_type = type(exc).__name__
     error_detail = str(exc)
-    
+
     logger.error(
         "unhandled_exception",
         error=error_type,
         detail=error_detail,
         path=request.url.path,
     )
-    
+
     return JSONResponse(
         status_code=500,
         content={
             "error": "Internal Server Error",
-            "detail": error_detail if settings.app_env == "development" else "An unexpected error occurred",
+            "detail": error_detail
+            if settings.app_env == "development"
+            else "An unexpected error occurred",
             "correlation_id": correlation_id,
         },
     )
+
 
 @app.get("/health")
 async def health_check():
@@ -102,14 +107,21 @@ async def health_check():
         "environment": settings.app_env,
     }
 
+
 # Admin Routes
 app.include_router(admin.router)
+
+# Market Data Routes
+app.include_router(market_data.router)
+
 
 # For testing audit logs
 @app.post("/test-audit")
 async def test_audit_post(data: dict):
     return {"received": data}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
