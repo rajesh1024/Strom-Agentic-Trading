@@ -161,3 +161,12 @@ Every task's code MUST include:
 4. **Fixture Validation** — all fixtures must pass `python tests/validate_fixtures.py`
 5. **Risk-specific tests** — if touching risk/execution: test that bypass is impossible
 6. **Idempotency** — if operation can be retried, test that double-execution is safe
+
+---
+
+## CI / CD RULES
+
+1. **Linting First**: The CI pipeline fails fast on lint errors. Code MUST pass `ruff` and `eslint`. No exceptions.
+2. **Type Security**: MyPy and TSC are mandatory to guarantee type safety.
+3. **Time Bound**: The entire CI pipeline must execute in under 5 minutes utilizing parallel concurrent execution.
+4. **Test Boundaries**: Missing tests (≤80% coverage) or failing unit tests will block merge.

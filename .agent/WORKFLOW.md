@@ -107,3 +107,16 @@ A task is NOT done until:
 8. ✅ PR approved and CI green.
 9. ✅ Docker build successful and health checks pass.
 10. ✅ Merged to `main` via squash merge.
+
+---
+
+## 🚀 CI Pipeline (GitHub Actions)
+
+The CI pipeline runs automatically on every Pull Request to `main`. It ensures our strict requirements are met efficiently.
+
+**Pipeline Stages:**
+1. **Linting (Parallel & Fast Fail)**: Runs `ruff` (backend/agents) and `eslint` (frontend). If linting fails, it stops immediately.
+2. **Type Checking (Parallel)**: Runs `mypy` and `tsc` ensuring strict typing compliance. Need `lint` to succeed first.
+3. **Tests (Parallel)**: Runs `pytest` and `vitest` with coverage checks (≥80% required on API).
+4. **Security Scan**: Runs `bandit` on Python code and `npm audit` on Node code.
+5. **Docker Build**: Validates image builds for `api`, `dashboard`, and `agents` concurrently using a matrix strategy.
