@@ -1,0 +1,17 @@
+{
+    "id": "trend_following_nifty_v1",
+    "name": "Nifty Trend Following (v1)",
+    "type": "TREND_FOLLOWING",
+    "underlying": "NIFTY",
+    "regime_affinity": [
+        "trending_up",
+        "trending_down"
+    ],
+    "params": {
+        "ema_short": 20,
+        "ema_long": 50,
+        "rsi_period": 14,
+        "rsi_overbought": 70,
+        "rsi_oversold": 30
+    }
+}

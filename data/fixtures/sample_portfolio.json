@@ -1,0 +1,47 @@
+{
+    "positions": [
+        {
+            "instrument": "NIFTY26MAR24800CE",
+            "qty": 50,
+            "avg_price": 115.2,
+            "ltp": 120.5,
+            "pnl": 265.0,
+            "greeks": {
+                "delta": 32.5,
+                "theta": -525.0
+            }
+        },
+        {
+            "instrument": "RELIANCE",
+            "qty": 100,
+            "avg_price": 2450.0,
+            "ltp": 2480.0,
+            "pnl": 3000.0
+        }
+    ],
+    "total_pnl": 3265.0,
+    "margin_used": 150000.0,
+    "margin_available": 850000.0,
+    "portfolio_greeks": {
+        "delta": 45.2,
+        "gamma": 0.005,
+        "theta": -850.4,
+        "vega": 120.5
+    },
+    "crypto_positions": [
+        {
+            "symbol": "BTCUSDT",
+            "qty": 0.25,
+            "avg_price": 62000.0,
+            "ltp": 65000.5,
+            "pnl": 750.12
+        },
+        {
+            "symbol": "ETHUSDT",
+            "qty": 5.0,
+            "avg_price": 3200.0,
+            "ltp": 3450.2,
+            "pnl": 1251.0
+        }
+    ]
+}

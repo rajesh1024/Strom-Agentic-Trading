@@ -1,0 +1,39 @@
+[
+    {
+        "signal_id": "sig_20260302_001",
+        "signal": "BUY",
+        "instrument": "NIFTY26MAR24800CE",
+        "strike": 24800,
+        "option_type": "CE",
+        "qty": 50,
+        "entry_price": 120.5,
+        "stop_loss": 95.0,
+        "target": 180.0,
+        "strategy_id": "trend_following_v1",
+        "confidence_score": 0.85,
+        "rationale_data": {
+            "regime": "trending_up",
+            "rsi": 58.2,
+            "pcr": 1.15
+        },
+        "timestamp": "2026-03-02T10:10:00Z"
+    },
+    {
+        "signal_id": "sig_20260302_002",
+        "signal": "SELL",
+        "instrument": "BANKNIFTY26MAR53000PE",
+        "strike": 53000,
+        "option_type": "PE",
+        "qty": 25,
+        "entry_price": 210.5,
+        "stop_loss": 260.0,
+        "target": 120.0,
+        "strategy_id": "mean_reversion_v1",
+        "confidence_score": 0.72,
+        "rationale_data": {
+            "regime": "volatile",
+            "iv_skew": -1.5
+        },
+        "timestamp": "2026-03-02T10:15:00Z"
+    }
+]

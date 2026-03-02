@@ -1,0 +1,13 @@
+{
+    "max_position_size": 4,
+    "max_portfolio_delta": 0.5,
+    "max_daily_loss": 20000.0,
+    "max_drawdown": 0.1,
+    "margin_check": 0.9,
+    "time_of_day": {
+        "start": "09:20",
+        "end": "15:15"
+    },
+    "correlation_limit": 0.8,
+    "single_concentration": 0.4
+}

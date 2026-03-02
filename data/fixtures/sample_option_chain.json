@@ -1,0 +1,83 @@
+[
+    {
+        "underlying": "NIFTY",
+        "spot_price": 24850.55,
+        "timestamp": "2026-03-02T10:00:00Z",
+        "expiry": "2026-03-05",
+        "stale": false,
+        "chain": [
+            {
+                "strike": 24800,
+                "ce_ltp": 120.5,
+                "pe_ltp": 45.2,
+                "ce_oi": 550000,
+                "pe_oi": 1200000,
+                "ce_iv": 14.5,
+                "pe_iv": 16.2,
+                "ce_greeks": {
+                    "delta": 0.65,
+                    "gamma": 0.001,
+                    "theta": -10.5,
+                    "vega": 5.2
+                },
+                "pe_greeks": {
+                    "delta": -0.35,
+                    "gamma": 0.001,
+                    "theta": -8.5,
+                    "vega": 4.8
+                }
+            },
+            {
+                "strike": 24900,
+                "ce_ltp": 65.4,
+                "pe_ltp": 95.8,
+                "ce_oi": 1850000,
+                "pe_oi": 450000,
+                "ce_iv": 14.8,
+                "pe_iv": 16.5,
+                "ce_greeks": {
+                    "delta": 0.42,
+                    "gamma": 0.0015,
+                    "theta": -12.2,
+                    "vega": 5.8
+                },
+                "pe_greeks": {
+                    "delta": -0.58,
+                    "gamma": 0.0015,
+                    "theta": -10.8,
+                    "vega": 5.5
+                }
+            }
+        ]
+    },
+    {
+        "underlying": "BANKNIFTY",
+        "spot_price": 52430.40,
+        "timestamp": "2026-03-02T10:00:00Z",
+        "expiry": "2026-03-04",
+        "stale": false,
+        "chain": [
+            {
+                "strike": 52400,
+                "ce_ltp": 340.2,
+                "pe_ltp": 210.5,
+                "ce_oi": 250000,
+                "pe_oi": 600000,
+                "ce_iv": 18.2,
+                "pe_iv": 20.5,
+                "ce_greeks": {
+                    "delta": 0.55,
+                    "gamma": 0.0005,
+                    "theta": -45.0,
+                    "vega": 15.2
+                },
+                "pe_greeks": {
+                    "delta": -0.45,
+                    "gamma": 0.0005,
+                    "theta": -40.0,
+                    "vega": 14.8
+                }
+            }
+        ]
+    }
+]

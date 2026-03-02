@@ -1,0 +1,33 @@
+{
+    "pcr": 1.15,
+    "iv_skew": 2.4,
+    "max_pain": 24800,
+    "oi_change_ce_top5": [
+        {
+            "strike": 24900,
+            "change": 150000
+        },
+        {
+            "strike": 25000,
+            "change": 80000
+        }
+    ],
+    "oi_change_pe_top5": [
+        {
+            "strike": 24800,
+            "change": 220000
+        },
+        {
+            "strike": 24700,
+            "change": 120000
+        }
+    ],
+    "vwap_deviation": 0.35,
+    "atr_14": 125.4,
+    "rsi_14": 58.2,
+    "regime_features": {
+        "volatility_rank": 0.45,
+        "trend_strength": 0.72,
+        "mean_reversion_score": 0.28
+    }
+}
