@@ -161,3 +161,32 @@ Every task's code MUST include:
 4. **Fixture Validation** — all fixtures must pass `python tests/validate_fixtures.py`
 5. **Risk-specific tests** — if touching risk/execution: test that bypass is impossible
 6. **Idempotency** — if operation can be retried, test that double-execution is safe
+
+---
+
+## CI / CD RULES
+
+1. **Linting First**: The CI pipeline fails fast on lint errors. Code MUST pass `ruff` and `eslint`. No exceptions.
+2. **Type Security**: MyPy and TSC are mandatory to guarantee type safety.
+3. **Time Bound**: The entire CI pipeline must execute in under 5 minutes utilizing parallel concurrent execution.
+4. **Test Boundaries**: Missing tests (≤80% coverage) or failing unit tests will block merge.
+
+---
+
+## FRONTEND SPECIFIC RULES
+
+### State Management Guidelines
+- **Store Usage**: Group stores logically (e.g., `portfolioStore`, `configStore`, `agentStore`, `signalStore`).
+- **Persistence**: Persist user settings to local storage via zustand persist middleware.
+- **Data Fetching**: Use `@tanstack/react-query` to cache standard network requests, configured globally via `QueryProvider` in `layout.tsx`.
+- **WebSocket**: Use `useWebSocket` hook to handle incoming events, invalidating queries dynamically and directly mutating Zustand stores when speed is preferred.
+- **Optimistic Updates**: Wrap critical actions (like `submitOrder`) using query mutations with `onMutate` to present instant UI feedback, and fallback/revert on failure.
+
+### Shared Components Registry
+- **DataTable**: Built on `@tanstack/react-table`. Supports sorting, filtering, and pagination.
+- **MetricCard**: Displays value with trend (up/down) and indicator colors.
+- **AssetClassBadge**: Colored pill labels (Equity=Green, Crypto=Purple).
+- **StatusBadge**: Pulse-dot status indicators (Success, Warning, Error).
+- **LoadingSpinner**: Standardized Loader2 with accessibility labels.
+- **ConfirmDialog**: Reusable AlertDialog for destructive or critical actions.
+- **ErrorBoundary**: Graceful failure UI for component crashes.

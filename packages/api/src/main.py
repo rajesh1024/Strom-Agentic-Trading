@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.config import settings
+from src.utils.audit_middleware import AuditMiddleware
+from src.routers import admin
 
 # Configure structured logging
 structlog.configure(
@@ -41,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Audit Middleware (execute after CORSMiddleware)
+app.add_middleware(AuditMiddleware)
 
 # Middleware for correlation ID and request logging
 @app.middleware("http")
@@ -96,6 +101,14 @@ async def health_check():
         "version": settings.version,
         "environment": settings.app_env,
     }
+
+# Admin Routes
+app.include_router(admin.router)
+
+# For testing audit logs
+@app.post("/test-audit")
+async def test_audit_post(data: dict):
+    return {"received": data}
 
 if __name__ == "__main__":
     import uvicorn

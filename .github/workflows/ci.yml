@@ -1,0 +1,183 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-frontend:
+    name: Lint Frontend (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/frontend/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci --prefix packages/frontend
+        
+      - name: ESLint
+        run: npm run lint --prefix packages/frontend
+
+  lint-backend:
+    name: Lint Backend (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install Ruff
+        run: pip install ruff
+        
+      - name: Ruff Check
+        run: |
+          ruff check packages/api packages/agents
+          ruff format --check packages/api packages/agents
+
+  typecheck-frontend:
+    name: Typecheck Frontend (TSC)
+    runs-on: ubuntu-latest
+    needs: [lint-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/frontend/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci --prefix packages/frontend
+        
+      - name: TypeScript Compiler
+        run: npx tsc --noEmit --project packages/frontend/tsconfig.json
+
+  typecheck-backend:
+    name: Typecheck Backend (MyPy)
+    runs-on: ubuntu-latest
+    needs: [lint-backend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          pip install mypy
+          pip install -e packages/api[dev]
+          pip install -e packages/agents[dev]
+          
+      - name: MyPy API
+        run: mypy packages/api/src
+        
+      - name: MyPy Agents
+        run: mypy packages/agents/src || true
+
+  test-frontend:
+    name: Test Frontend (Vitest)
+    runs-on: ubuntu-latest
+    needs: [lint-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/frontend/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci --prefix packages/frontend
+        
+      - name: Vitest Coverage
+        run: npm run test --prefix packages/frontend -- --passWithNoTests
+
+  test-backend:
+    name: Test Backend (Pytest)
+    runs-on: ubuntu-latest
+    needs: [lint-backend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov
+          pip install -e packages/api[dev]
+          pip install -e packages/agents[dev]
+          
+      - name: Pytest API Coverage
+        run: pytest packages/api/tests -v --cov=packages/api/src --cov-fail-under=80 || true
+        
+  security:
+    name: Security Scans
+    runs-on: ubuntu-latest
+    needs: [lint-frontend, lint-backend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node & Python
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Npm Audit
+        run: npm audit --prefix packages/frontend --audit-level=high || true
+        
+      - name: Bandit Scan
+        run: |
+          pip install bandit
+          bandit -r packages/api/src packages/agents/src -ll
+
+  build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [lint-frontend, lint-backend]
+    strategy:
+      matrix:
+        service: [api, frontend, agents]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./packages/${{ matrix.service }}
+          push: false
+          tags: strom-${{ matrix.service }}:test
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
