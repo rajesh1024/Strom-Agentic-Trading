@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     broker_api_secret: str = ""
     broker_access_token: str = ""
     
+    # Dhan Broker Specific
+    dhan_client_id: str = ""
+    dhan_access_token: str = ""
+    
     # Data Vendor
     data_vendor: str = "mock"
     data_vendor_api_key: str = ""

@@ -7,44 +7,59 @@
 ## IRON RULES (applies to ALL code, ALL agents)
 
 ### 1. LLM Never Touches Money
+
 - All order placement, modification, and cancellation is **deterministic Python code**.
 - LLM agents orchestrate workflows and generate natural-language outputs ONLY.
 - No LLM output is ever used as a direct input to `place_order` without passing through `check_risk` first.
 
 ### 2. RiskEngine Has Absolute Veto
+
 - The RiskEngine is a pure Python function. It returns APPROVE or REJECT.
 - No agent, no supervisor, no API endpoint can override a REJECT.
 - If RiskEngine errors out, the default is REJECT.
 - Risk approval has a TTL of 60 seconds. Stale approvals are invalid.
 
 ### 3. Numerical Computation = Code Only
+
 - Greeks, P&L, indicators (RSI, ATR, VWAP), feature vectors — all computed by Python functions.
 - LLM agents receive computed results as read-only structured data.
 - Never ask an LLM to "calculate" or "estimate" a number.
 
 ### 4. Stale Data = No Trade
+
 - If `fetch_option_chain` returns `stale: true`, the system MUST NOT generate signals.
 - If any feature in `compute_features` is null/NaN, the system MUST fallback to NO_SIGNAL.
 - If broker API is unreachable, no orders are placed. Alert raised immediately.
 
-### 5. Kill Switch is Sacred
+### 5. Execution Adapter Standards
+
+- All `BrokerAdapter` implementations MUST include a rate limiter enforcing vendor-specific limits.
+- All adapters MUST support a `mock: bool` mode for testing without real API calls.
+- Credentials (tokens, IDs) MUST be fetched from `settings` and NEVER hardcoded or logged.
+- Error codes from vendors MUST be mapped to internal exception types or normalized status responses.
+
+### 6. Kill Switch is Sacred
+
 - `POST /admin/killswitch` must ALWAYS work — even if other services are down.
 - Kill switch actions (in order): cancel all pending orders → halt all agents → optionally flatten positions → send CRITICAL alert.
 - Kill switch must complete within 2 seconds.
 - After kill switch, no new orders are accepted until explicit reset.
 
-### 6. Audit Everything
+### 7. Audit Everything
+
 - Every state-changing action (order, risk decision, agent spawn/retire, config change) is logged to `audit_log` table.
 - Logs include: timestamp, agent_id, action, inputs, outputs, correlation_id.
 - Audit logs are immutable (INSERT only, no UPDATE/DELETE).
 - Retention: minimum 5 years (SEBI compliance).
 
-### 7. Credentials Never Leak
+### 8. Credentials Never Leak
+
 - Broker API keys, secrets, tokens: stored in env vars or secrets manager ONLY.
 - Never in: database, Redis, agent memory, logs, API responses, error messages, frontend.
 - Memory write tool rejects any value matching known credential patterns.
 
-### 8. Agent Lifecycle Discipline
+### 9. Agent Lifecycle Discipline
+
 - Max concurrent agents: 20 (configurable via `MAX_AGENTS` env var).
 - Idle timeout: 5 min → IDLE state. 15 min → RETIRED.
 - Heartbeat: every 30 seconds. 2 missed heartbeats → auto-retire + alert.
@@ -55,6 +70,7 @@
 ## CODE STANDARDS
 
 ### Backend (Python / FastAPI)
+
 - Python 3.11+
 - All inputs validated with Pydantic v2 models (strict mode)
 - Async-first (`async def` for all route handlers and service methods)
@@ -64,6 +80,7 @@
 - Coverage minimum: 80% on new code
 
 ### Frontend (TypeScript / Next.js)
+
 - Next.js 14 App Router + React 18
 - TypeScript strict mode (`"strict": true` in tsconfig)
 - No `any` types except at API boundaries (with runtime validation)
@@ -74,6 +91,7 @@
 - Coverage minimum: 80% on components
 
 ### Shared
+
 - Conventional commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`
 - Branch naming: `{workstream}/{task-id}-{short-description}` (e.g., `backend/B7-risk-engine`)
 - PR requires: 1 approval + CI green + no conflicts
@@ -82,22 +100,23 @@
 
 ## RISK RULES (implemented in RiskEngine)
 
-| Rule | Parameter | Default | Description |
-|------|-----------|---------|-------------|
-| max_position_size | Per instrument | 4 lots | Max lots for any single instrument |
-| max_portfolio_delta | Absolute | 0.5 | Max absolute portfolio delta |
-| max_daily_loss | INR | ₹20,000 | Hard stop on daily loss |
-| max_drawdown | Percentage | 10% | Max drawdown from peak |
-| margin_check | Percentage | 90% | Reject if margin util > 90% |
-| time_of_day | Time range | 09:20–15:15 | No orders outside market hours |
-| correlation_limit | Threshold | 0.8 | Max correlation between positions |
-| single_concentration | Percentage | 40% | Max % of capital in one instrument |
+| Rule                 | Parameter      | Default     | Description                        |
+| -------------------- | -------------- | ----------- | ---------------------------------- |
+| max_position_size    | Per instrument | 4 lots      | Max lots for any single instrument |
+| max_portfolio_delta  | Absolute       | 0.5         | Max absolute portfolio delta       |
+| max_daily_loss       | INR            | ₹20,000     | Hard stop on daily loss            |
+| max_drawdown         | Percentage     | 10%         | Max drawdown from peak             |
+| margin_check         | Percentage     | 90%         | Reject if margin util > 90%        |
+| time_of_day          | Time range     | 09:20–15:15 | No orders outside market hours     |
+| correlation_limit    | Threshold      | 0.8         | Max correlation between positions  |
+| single_concentration | Percentage     | 40%         | Max % of capital in one instrument |
 
 ---
 
 ## MEMORY RULES
 
 ### Allowed in Memory
+
 - Structured feature vectors
 - Trade signals and outcomes
 - Regime classifications with timestamps
@@ -106,6 +125,7 @@
 - Agent lifecycle events
 
 ### FORBIDDEN in Memory (tool rejects these)
+
 - Broker API keys, secrets, tokens, passwords
 - Raw order book / tick-by-tick data
 - Personally identifiable information (PII)
@@ -134,6 +154,7 @@ except Exception as e:
 ```
 
 **Fallback actions by context:**
+
 - Signal generation error → NO_SIGNAL
 - Risk check error → REJECT (always conservative)
 - Order placement error → do NOT retry automatically, alert operator
@@ -155,6 +176,7 @@ except Exception as e:
 ## TESTING REQUIREMENTS
 
 Every task's code MUST include:
+
 1. **Unit tests** — cover happy path + at least 2 edge cases
 2. **Error handling tests** — verify graceful failure
 3. **No hardcoded test data** — use fixtures from `data/fixtures/`
@@ -176,6 +198,7 @@ Every task's code MUST include:
 ## FRONTEND SPECIFIC RULES
 
 ### State Management Guidelines
+
 - **Store Usage**: Group stores logically (e.g., `portfolioStore`, `configStore`, `agentStore`, `signalStore`).
 - **Persistence**: Persist user settings to local storage via zustand persist middleware.
 - **Data Fetching**: Use `@tanstack/react-query` to cache standard network requests, configured globally via `QueryProvider` in `layout.tsx`.
@@ -183,6 +206,7 @@ Every task's code MUST include:
 - **Optimistic Updates**: Wrap critical actions (like `submitOrder`) using query mutations with `onMutate` to present instant UI feedback, and fallback/revert on failure.
 
 ### Shared Components Registry
+
 - **DataTable**: Built on `@tanstack/react-table`. Supports sorting, filtering, and pagination.
 - **MetricCard**: Displays value with trend (up/down) and indicator colors.
 - **AssetClassBadge**: Colored pill labels (Equity=Green, Crypto=Purple).

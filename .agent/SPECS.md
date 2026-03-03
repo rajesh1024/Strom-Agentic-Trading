@@ -7,6 +7,7 @@
 ## Database Schema
 
 ### trade_log
+
 ```sql
 CREATE TABLE trade_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -29,6 +30,7 @@ CREATE INDEX idx_trade_log_strategy ON trade_log(strategy_id);
 ```
 
 ### strategy_registry
+
 ```sql
 CREATE TABLE strategy_registry (
     id VARCHAR(64) PRIMARY KEY,
@@ -46,6 +48,7 @@ CREATE TABLE strategy_registry (
 ```
 
 ### strategy_performance
+
 ```sql
 CREATE TABLE strategy_performance (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,6 +67,7 @@ CREATE TABLE strategy_performance (
 ```
 
 ### audit_log
+
 ```sql
 CREATE TABLE audit_log (
     id BIGSERIAL PRIMARY KEY,
@@ -84,6 +88,7 @@ CREATE INDEX idx_audit_log_action ON audit_log(action);
 ```
 
 ### orders
+
 ```sql
 CREATE TABLE orders (
     id VARCHAR(64) PRIMARY KEY,
@@ -109,6 +114,7 @@ CREATE TABLE orders (
 ```
 
 ### positions
+
 ```sql
 CREATE TABLE positions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -128,6 +134,7 @@ CREATE TABLE positions (
 ## API Contracts (Pydantic Models)
 
 ### Shared Models
+
 ```python
 from pydantic import BaseModel, Field
 from datetime import datetime, date
@@ -393,48 +400,59 @@ system.killswitch
 
 ### Consumer Groups
 
-| Group | Consumers | Streams |
-|-------|-----------|---------|
-| signal-engine | 1 | market.ticks |
-| risk-engine | 1 | signals.generated |
-| execution-gateway | 1 | risk.decisions |
-| portfolio-manager | 1 | orders.filled |
-| websocket-gateway | 1 | ALL (fan-out to clients) |
-| agent-runtime | 1 | signals.*, risk.*, portfolio.* |
-| audit-logger | 1 | ALL |
+| Group             | Consumers | Streams                         |
+| ----------------- | --------- | ------------------------------- |
+| signal-engine     | 1         | market.ticks                    |
+| risk-engine       | 1         | signals.generated               |
+| execution-gateway | 1         | risk.decisions                  |
+| portfolio-manager | 1         | orders.filled                   |
+| websocket-gateway | 1         | ALL (fan-out to clients)        |
+| agent-runtime     | 1         | signals._, risk._, portfolio.\* |
+| audit-logger      | 1         | ALL                             |
 
 ---
 
 ## WebSocket Protocol
 
 ### Connection
+
 ```
 ws://localhost:8000/api/v1/ws?token=<jwt_token>
 ```
 
 ### Subscribe
+
 ```json
-{ "type": "subscribe", "channels": ["market.ticks", "portfolio.updated", "alerts.triggered"] }
+{
+  "type": "subscribe",
+  "channels": ["market.ticks", "portfolio.updated", "alerts.triggered"]
+}
 ```
 
 ### Unsubscribe
+
 ```json
 { "type": "unsubscribe", "channels": ["market.ticks"] }
 ```
 
 ### Server Message
+
 ```json
 { "type": "event", "channel": "portfolio.updated", "data": { ... }, "timestamp": "ISO8601" }
 ```
 
 ### Heartbeat (server sends every 15s)
+
 ```json
 { "type": "ping" }
 ```
+
 Client must respond:
+
 ```json
 { "type": "pong" }
 ```
+
 3 missed pongs → server closes connection.
 
 ---
@@ -489,6 +507,17 @@ class BrokerAdapter(ABC):
     @abstractmethod
     async def get_margins(self) -> dict:
         """Get margin state. Returns { used, available, total }"""
+
+### Dhan Implementation (`DhanBrokerAdapter`)
+- **API Version**: DhanHQ API v2
+- **Rate Limit**: 10 requests per second (enforced via rolling window)
+- **Product Mapping**:
+    - `MIS` (Intraday) -> `INTRADAY`
+    - `NRML` (Carry Forward) -> `MARGIN`
+    - `CNC` (Delivery) -> `CNC`
+- **Exchange Segments**: `NSE_EQ`, `NSE_FNO` (automatically detected from instrument)
+- **Order Types**: `LIMIT`, `MARKET`, `SL`, `SLM`
+- **Instrument Mapping**: Supports mapping internal symbols (e.g., `NIFTY`) to Dhan `securityId` via daily updated instrument master.
 ```
 
 ---

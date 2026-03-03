@@ -10,12 +10,14 @@
 Follow these steps to get the platform running locally in <5 minutes.
 
 ### 1. Prerequisites
+
 - **Docker Desktop** (with Compose)
 - **Git**
 - **Python 3.11+** (for local IDE support)
 - **Node.js 20+** (for local IDE support)
 
 ### 2. Setup (3-Command Start)
+
 From the project root:
 
 1. **Initialize Environment**:
@@ -32,7 +34,9 @@ From the project root:
    ```
 
 ### 3. Verify System Health
+
 Once services are up, verify via terminal:
+
 - **API**: `curl -f http://localhost:8000/health` (Expect `{"status": "ok"}`)
 - **Mock Broker**: `curl -f http://localhost:8001/health`
 - **Dashboard**: Open `http://localhost:3000` in your browser.
@@ -59,12 +63,14 @@ strom/
 ## 🛠 Development Workflow
 
 ### Git & Branching
+
 - **Main branch**: `main` (protected)
 - **Feature branches**: `workstream/T-task-id-description`
   - Example: `backend/B7-risk-engine`
 - **Commits**: Follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ### Pull Request Process
+
 1. Create branch from `main`.
 2. Implement code + tests + docs.
 3. Run local verification (lint + tests).
@@ -76,6 +82,7 @@ strom/
 ## 🐳 Docker Workflow
 
 ### Local Operations
+
 - **Spin up everything**: `docker compose -f docker-compose.dev.yml up -d`
 - **View logs**: `docker compose -f docker-compose.dev.yml logs -f [service]`
 - **Check health**: `docker compose -f docker-compose.dev.yml ps`
@@ -86,17 +93,20 @@ strom/
 
 ## 🧪 Testing & Quality
 
-| Tool | Command | Purpose |
-|------|---------|---------|
-| **Ruff** | `ruff check .` | Linting & Formatting (Python) |
-| **ESLint** | `npm run lint` | Linting & Formatting (TS) |
-| **Pytest** | `pytest --cov=src`| Unit & Integration Tests |
-| **Mypy** | `mypy .` | Static Type Checking |
+| Tool          | Command                                                                   | Purpose                       |
+| ------------- | ------------------------------------------------------------------------- | ----------------------------- |
+| **Ruff**      | `ruff check .`                                                            | Linting & Formatting (Python) |
+| **ESLint**    | `npm run lint`                                                            | Linting & Formatting (TS)     |
+| **Pytest**    | `pytest --cov=src`                                                        | Unit & Integration Tests      |
+| **Mypy**      | `mypy .`                                                                  | Static Type Checking          |
+| **Dhan Test** | `export PYTHONPATH=$PYTHONPATH:/app && pytest tests/test_dhan_adapter.py` | Verify Dhan Adapter (Mock)    |
 
 ---
 
 ## 📝 Definition of Done (DoD)
+
 A task is NOT done until:
+
 1. ✅ ACs in task description are met.
 2. ✅ Unit tests pass with ≥80% coverage on new code.
 3. ✅ Zero lint errors (ruff / eslint).
@@ -115,6 +125,7 @@ A task is NOT done until:
 The CI pipeline runs automatically on every Pull Request to `main`. It ensures our strict requirements are met efficiently.
 
 **Pipeline Stages:**
+
 1. **Linting (Parallel & Fast Fail)**: Runs `ruff` (backend/agents) and `eslint` (frontend). If linting fails, it stops immediately.
 2. **Type Checking (Parallel)**: Runs `mypy` and `tsc` ensuring strict typing compliance. Need `lint` to succeed first.
 3. **Tests (Parallel)**: Runs `pytest` and `vitest` with coverage checks (≥80% required on API).
@@ -124,6 +135,7 @@ The CI pipeline runs automatically on every Pull Request to `main`. It ensures o
 ---
 
 ## 📅 Workstream Status: Frontend
+
 - [x] Project Scaffolding
 - [x] Layout Shell & Sidebar
 - [x] Responsive Mobile Bottom Nav
