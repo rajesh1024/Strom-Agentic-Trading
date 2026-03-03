@@ -83,7 +83,7 @@ class DhanBrokerAdapter(BrokerAdapter):
             
         raise Exception(f"Dhan Error [{error_code}]: {message}")
 
-    async def place_order(self, instrument: str, side: str, qty: int,
+    async def place_order(self, instrument: str, side: str, qty: float,
                           order_type: str, price: float | None,
                           trigger_price: float | None, tag: str) -> dict:
         """

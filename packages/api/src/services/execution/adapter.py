@@ -3,7 +3,7 @@ from typing import List, Dict, Optional, Any
 
 class BrokerAdapter(ABC):
     @abstractmethod
-    async def place_order(self, instrument: str, side: str, qty: int,
+    async def place_order(self, instrument: str, side: str, qty: float,
                           order_type: str, price: float | None,
                           trigger_price: float | None, tag: str) -> dict:
         """Place order. Returns { order_id, status, broker_ref }"""

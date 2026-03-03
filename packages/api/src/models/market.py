@@ -37,6 +37,13 @@ class FeatureVector(BaseModel):
     atr_14: float
     rsi_14: float
     regime_features: RegimeFeatures
+    
+    # Crypto specific (optional)
+    funding_rate: Optional[float] = None
+    open_interest_usd: Optional[float] = None
+    liquidation_levels: List[float] = Field(default_factory=list)
+    liquidation_density: Optional[float] = None
+    orderbook_imbalance: Optional[float] = None
 
 # Added Crypto Orderbook as requested by user even though it wasn't in SPECS.md
 class DepthLevel(BaseModel):

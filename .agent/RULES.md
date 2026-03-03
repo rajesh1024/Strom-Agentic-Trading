@@ -100,16 +100,17 @@
 
 ## RISK RULES (implemented in RiskEngine)
 
-| Rule                 | Parameter      | Default     | Description                        |
-| -------------------- | -------------- | ----------- | ---------------------------------- |
-| max_position_size    | Per instrument | 4 lots      | Max lots for any single instrument |
-| max_portfolio_delta  | Absolute       | 0.5         | Max absolute portfolio delta       |
-| max_daily_loss       | INR            | ₹20,000     | Hard stop on daily loss            |
-| max_drawdown         | Percentage     | 10%         | Max drawdown from peak             |
-| margin_check         | Percentage     | 90%         | Reject if margin util > 90%        |
-| time_of_day          | Time range     | 09:20–15:15 | No orders outside market hours     |
-| correlation_limit    | Threshold      | 0.8         | Max correlation between positions  |
-| single_concentration | Percentage     | 40%         | Max % of capital in one instrument |
+| Rule | Parameter | Default | Description |
+| Rule | Parameter | Default | Description |
+| -------------------- | -------------- | ----------- | --------------------------------------------------- |
+| max_position_size | Per instrument | 4 lots | Max lots for any single instrument |
+| max_portfolio_delta | Absolute | 0.5 | Max absolute portfolio delta |
+| max_daily_loss | INR | ₹20,000 | Hard stop on daily loss |
+| max_drawdown | Percentage | 10% | Max drawdown from peak |
+| margin_check | Percentage | 90% | Reject if margin util > 90% |
+| time_of_day | Time range | 09:20–15:15 | No orders outside market hours (exempt: Crypto 24/7) |
+| correlation_limit | Threshold | 0.8 | Max correlation between positions |
+| single_concentration | Percentage | 40% | Max % of capital in one instrument |
 
 ---
 

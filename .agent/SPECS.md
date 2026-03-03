@@ -487,7 +487,7 @@ from abc import ABC, abstractmethod
 
 class BrokerAdapter(ABC):
     @abstractmethod
-    async def place_order(self, instrument: str, side: str, qty: int,
+    async def place_order(self, instrument: str, side: str, qty: float,
                           order_type: str, price: float | None,
                           trigger_price: float | None, tag: str) -> dict:
         """Place order. Returns { order_id, status, broker_ref }"""
@@ -518,6 +518,14 @@ class BrokerAdapter(ABC):
 - **Exchange Segments**: `NSE_EQ`, `NSE_FNO` (automatically detected from instrument)
 - **Order Types**: `LIMIT`, `MARKET`, `SL`, `SLM`
 - **Instrument Mapping**: Supports mapping internal symbols (e.g., `NIFTY`) to Dhan `securityId` via daily updated instrument master.
+
+### Crypto Implementation (`CryptoBrokerAdapter`)
+- **Supported Exchanges**: Binance, Bybit
+- **Market Hours**: 24/7 (system must handle always-open state)
+- **Quantity**: Supports fractional quantities (e.g., `0.001 BTC`)
+- **Margin Mode**: Configurable via `CRYPTO_MARGIN_MODE` (cross or isolated)
+- **Fee Calculation**: Maker/Taker structures normalized in order status responses.
+- **WebSocket Price Feed**: Real-time ticker updates using vendor's WSS endpoints.
 ```
 
 ---
@@ -542,6 +550,11 @@ class DataVendorAdapter(ABC):
     @abstractmethod
     async def health_check(self) -> bool:
         """Return True if vendor API is reachable."""
+
+### Crypto Data Implementation (`CryptoDataVendor`)
+- **Normalization**: Real-time orderbook data normalized to `CryptoOrderbook` schema.
+- **Feature Vector**: Extends base `FeatureVector` with crypto-specific metrics (funding rate, open interest USD, liquidation levels).
+- **Latency**: Sub-50ms processing for price updates via optimized WebSocket listeners.
 
 ---
 

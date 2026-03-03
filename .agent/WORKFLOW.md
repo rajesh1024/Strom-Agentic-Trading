@@ -93,13 +93,14 @@ strom/
 
 ## 🧪 Testing & Quality
 
-| Tool          | Command                                                                   | Purpose                       |
-| ------------- | ------------------------------------------------------------------------- | ----------------------------- |
-| **Ruff**      | `ruff check .`                                                            | Linting & Formatting (Python) |
-| **ESLint**    | `npm run lint`                                                            | Linting & Formatting (TS)     |
-| **Pytest**    | `pytest --cov=src`                                                        | Unit & Integration Tests      |
-| **Mypy**      | `mypy .`                                                                  | Static Type Checking          |
-| **Dhan Test** | `export PYTHONPATH=$PYTHONPATH:/app && pytest tests/test_dhan_adapter.py` | Verify Dhan Adapter (Mock)    |
+| Tool             | Command                                                                                                      | Purpose                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| **Ruff**         | `ruff check .`                                                                                               | Linting & Formatting (Python) |
+| **ESLint**       | `npm run lint`                                                                                               | Linting & Formatting (TS)     |
+| **Pytest**       | `pytest --cov=src`                                                                                           | Unit & Integration Tests      |
+| **Mypy**         | `mypy .`                                                                                                     | Static Type Checking          |
+| **Dhan Test**    | `export PYTHONPATH=$PYTHONPATH:/app && pytest tests/test_dhan_adapter.py`                                    | Verify Dhan Adapter (Mock)    |
+| **Feature Test** | `docker exec strom-api pytest tests/test_greeks.py tests/test_indicators.py tests/test_crypto_indicators.py` | Verify Greeks & Features      |
 
 ---
 

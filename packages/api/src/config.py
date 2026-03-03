@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     dhan_client_id: str = ""
     dhan_access_token: str = ""
     
+    # Crypto Broker Specific
+    crypto_exchange: str = "binance"
+    crypto_api_key: str = ""
+    crypto_api_secret: str = ""
+    crypto_margin_mode: str = "cross" # cross or isolated
+    
     # Data Vendor
     data_vendor: str = "mock"
     data_vendor_api_key: str = ""

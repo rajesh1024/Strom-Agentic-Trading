@@ -11,6 +11,8 @@ from src.config import settings
 class Underlying(str, Enum):
     NIFTY = "NIFTY"
     BANKNIFTY = "BANKNIFTY"
+    BTC = "BTC"
+    ETH = "ETH"
 
 
 class Regime(str, Enum):
